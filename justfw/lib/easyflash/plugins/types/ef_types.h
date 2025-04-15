@@ -31,7 +31,7 @@
 
 #include <easyflash.h>
 #include <stdbool.h>
-#include "struct2json\inc\s2j.h"
+#include "struct2json/inc/s2j.h"
 
 /* EasyFlash types plugin's software version number */
 #define EF_TYPES_SW_VERSION                      "0.11.03"

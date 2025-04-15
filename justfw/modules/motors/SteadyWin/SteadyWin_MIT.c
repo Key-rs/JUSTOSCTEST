@@ -1,4 +1,5 @@
-#include "Steadywin_MIT.h"
+#include "SteadyWin_MIT.h"
+
 #define STEADY_MASTER_ID 0x00
 #include "motor_manager_config.h"
 #include "user_lib.h"
@@ -153,15 +154,17 @@ static void motor_can_cb(void* message, BusSubscriberHandle_t subscriber) {
         break;
 
     default:
-        uint16_t position = msg->data[1] << 8 | msg->data[2];
-        uint16_t speed = msg->data[3] << 8 | (msg->data[4] & 0xF0) >> 4;
-        uint16_t torque = (msg->data[4] & 0xF) << 8 | msg->data[5];
-
-        m->real_angle = position * 25.0f / 65535.0f - 12.5;
-        m->real_speed = speed * 130.0f / 4095.0f - 65;
-        m->real_torque = torque * (450 * priv->torque_constant * priv->gear_rate) / 4095 - (225 * priv->torque_constant * priv->gear_rate);
-
-        break;
+        {
+            uint16_t position = msg->data[1] << 8 | msg->data[2];
+            uint16_t speed = msg->data[3] << 8 | (msg->data[4] & 0xF0) >> 4;
+            uint16_t torque = (msg->data[4] & 0xF) << 8 | msg->data[5];
+    
+            m->real_angle = position * 25.0f / 65535.0f - 12.5;
+            m->real_speed = speed * 130.0f / 4095.0f - 65;
+            m->real_torque = torque * (450 * priv->torque_constant * priv->gear_rate) / 4095 - (225 * priv->torque_constant * priv->gear_rate);
+    
+            break;
+        }
     }
 
     priv->recived = true;

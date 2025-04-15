@@ -17,7 +17,7 @@
   ****************************(C) COPYRIGHT 2019 DJI****************************
   */
 
-#include "ist8310driver_middleWare.h"
+#include "ist8310driver_middleware.h"
 #include "main.h"
 
 extern I2C_HandleTypeDef hi2c3;
