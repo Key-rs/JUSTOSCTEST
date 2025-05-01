@@ -185,6 +185,7 @@ static void motor_mainloop() {
 
             // priv->is_revd = false;
             switch (m->motor_state) {
+            
             case MOTOR_STATE_INIT:
                 motor_enable(m);
                 vTaskDelay(COMMAND_DELAY_TICK);
@@ -221,7 +222,9 @@ static void motor_mainloop() {
                 vTaskDelay(COMMAND_DELAY_TICK);
                 break;
             }
+            item = listGET_NEXT(item);
         }
+       
         vTaskDelay(1);
     }
 }
