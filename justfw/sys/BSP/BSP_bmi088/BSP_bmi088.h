@@ -16,12 +16,10 @@
 // #include "bmi08x.h"
 #include "arm_math.h"
 
-void BSP_bmi088_Init();
-
 #ifdef USE_BOARD_C
 #define BMI088_SPI_HANDLE hspi1
 #define BMI088_SPI_DMA_RX_HANDLE hdma_spi1_rx
-#define BIM088_SPI_DMA_TX_HANDLE hdma_spi2_tx
+#define BMI088_SPI_DMA_TX_HANDLE hdma_spi1_tx
 
 #endif
 
@@ -73,6 +71,8 @@ void BSP_bmi088_Init();
 #define INS_MAG_X_ADDRESS_OFFSET 0
 #define INS_MAG_Y_ADDRESS_OFFSET 1
 #define INS_MAG_Z_ADDRESS_OFFSET 2
+
+void BSP_bmi088_Init();
 
 /**
  * @brief          imu任务, 初始化 bmi088, ist8310, 计算欧拉角

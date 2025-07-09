@@ -27,7 +27,7 @@ void Sys_Init() {
     BSP_bmi088_Init();
 #endif
 
-    CLI_Init();
+    // CLI_Init();
     Storage_Init();
 
     // 避免printf() 无输出

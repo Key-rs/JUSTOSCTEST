@@ -2,6 +2,8 @@
 // finished by tilihuo123 on 2025/3/26
 // RT第一人称对抗赛充气轮
 
+#include <stdio.h>
+
 #include "SuperBig.h"
 
 RC_ctrl_t *Super_logic_rc_ctrl;
@@ -65,27 +67,8 @@ static void SuperBig_MainLoop()
 
     while (1)
     {
-        switch (Super_logic_rc_ctrl[0].rc.switch_right)
-        {
-        case RC_SW_UP:
-            MAX_MOTOR_SPEED = 10;
-            break;
-
-        case RC_SW_MID:
-            MAX_MOTOR_SPEED = 15;
-            break;
-        case RC_SW_DOWN:
-            MAX_MOTOR_SPEED = 20;
-            break;
-        }
-
-        Differential_Control_4WD(
-            Super_logic_rc_ctrl[0].rc.rocker_l_,
-            Super_logic_rc_ctrl[0].rc.rocker_l1,
-            Super_logic_rc_ctrl[0].rc.rocker_r_,
-            MAX_MOTOR_SPEED);
-        Big_Control(Super_logic_rc_ctrl[0].rc.rocker_r1);
-        vTaskDelay(1);
+    printf("USB_OK");
+        vTaskDelay(10);
     }
 }
 

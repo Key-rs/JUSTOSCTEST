@@ -50,12 +50,12 @@ add_compile_options(-Wno-switch)
 
 # 设置链接器选项
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--no-warn-rwx-segments")
+project(${CMAKE_PROJECT_NAME})
 
 # Enable CMake support for ASM and C languages
 enable_language(C ASM)
 
 # Core project settings
-project(${CMAKE_PROJECT_NAME})
 message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Create an executable object type

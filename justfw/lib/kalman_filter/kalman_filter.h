@@ -16,10 +16,7 @@
 // cortex-m4 DSP lib
 /*
 #define __CC_ARM    // Keil
-#define ARM_MATH_CM4
-#define ARM_MATH_MATRIX_CHECK
-#define ARM_MATH_ROUNDING
-#define ARM_MATH_DSP    // define in arm_math.h
+
 */
 
 #include "main.h"
