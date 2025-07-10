@@ -1,0 +1,11 @@
+#ifndef __MODULES_CONFIG_H
+#define __MODULES_CONFIG_H
+
+// #define USE_STEADYWIN_MIT_DRIVER
+// #define USE_ODRIVE_CAN_DRIVER
+// #define USE_GM_MOTOR_DRIVER
+// #define USE_DM_MOTOR_DRIVER
+// #define USE_BrushESC775_DRIVER
+// #define USE_STEADYWIN_ODIRVE_MIT_DRIVER
+
+#endif

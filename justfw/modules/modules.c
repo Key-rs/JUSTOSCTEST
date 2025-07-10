@@ -35,7 +35,7 @@ void Modules_Init() {
     MotorManager_Init();
 
     DR16_Init();
-    SuperBig_Init();
+    // SuperBig_Init();
 
     __enable_irq();
 }

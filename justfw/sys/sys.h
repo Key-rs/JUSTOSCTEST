@@ -2,7 +2,7 @@
 #define __SYS_H
 
 #include "justfw_cfg.h"
-//
+
 #include "BSP_CAN.h"
 #include "BSP_UART.h"
 #include "BSP_USB.h"
