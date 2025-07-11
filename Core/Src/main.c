@@ -119,12 +119,12 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM8_Init();
   MX_USART6_UART_Init();
+  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN 2 */
-  //USB软复�?
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11,
-                    0);
+  //USB软复位
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_11,0);
   HAL_Delay(65);
-  //先把PA12拉低再拉高，利用D+模拟USB的拔�?
+  //先把PA12拉低再拉高，利用D+模拟USB的拔插
   HAL_GPIO_WritePin(GPIOA,GPIO_PIN_11,1);
   HAL_Delay(65);
   HAL_GPIO_WritePin(LED_B_GPIO_Port, LED_B_Pin, GPIO_PIN_RESET);
@@ -132,8 +132,7 @@ int main(void)
   HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
   Sys_Init();
   Modules_Init();
-  vTaskDelay(pdMS_TO_TICKS(2000));
-  vBusPublishFromName("/buzzer", (void*)"BAD_APPLE");
+  vBusPublishFromName("/buzzer", (void*)"TWO_TIGGERS");
   /* USER CODE END 2 */
 
   /* Init scheduler */
