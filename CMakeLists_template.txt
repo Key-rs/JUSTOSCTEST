@@ -92,6 +92,8 @@ include_directories(${INCLUDES} "User")
 file(GLOB_RECURSE HEADER_FILES
         "justfw/**/*.h"
         "Middlewares/**/*.h"
+         "User/**/*.h"
+         "User/*.h"
 )
 foreach(header ${HEADER_FILES})
     get_filename_component(header_dir ${header} DIRECTORY)
@@ -100,9 +102,9 @@ endforeach()
 list(REMOVE_DUPLICATES INCLUDE_DIRS)
 include_directories(${INCLUDE_DIRS})
 
-file(GLOB_RECURSE JUSTFW "justfw/**/*.*" "User/**/*.*")
+file(GLOB_RECURSE JUSTFW "justfw/**/*.*" "User/**/*.*" "User/*.*")#"User/**/*.*" "User/*.*"
 
-include_directories(justfw/interface)
+#include_directories(justfw/interface)
 
 add_executable($${PROJECT_NAME}.elf $${SOURCES} $${LINKER_SCRIPT} $${JUSTFW})
 
