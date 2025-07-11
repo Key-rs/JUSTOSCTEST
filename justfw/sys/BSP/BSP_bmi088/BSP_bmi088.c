@@ -480,5 +480,5 @@ void BSP_bmi088_Init() {
 
     // osThreadDef(imuTask, INS_task, osPriorityRealtime, 0, 1024);
     // imuTaskHandle = osThreadCreate(osThread(imuTask), NULL);
-    xTaskCreate((void (*)(void *))INS_task, "IMU", 256, NULL, 1, (TaskHandle_t *const)&imuTaskHandle);
+    xTaskCreate(INS_task, "IMU", 256, NULL, 1, (TaskHandle_t *const)&imuTaskHandle);
 }
