@@ -68,8 +68,6 @@ void Error_Handler(void);
 #define LED_G_GPIO_Port GPIOH
 #define LED_B_Pin GPIO_PIN_10
 #define LED_B_GPIO_Port GPIOH
-#define BUZZER_Pin GPIO_PIN_14
-#define BUZZER_GPIO_Port GPIOD
 #define CS1_ACCEL_Pin GPIO_PIN_4
 #define CS1_ACCEL_GPIO_Port GPIOA
 #define INT1_ACCEL_Pin GPIO_PIN_4

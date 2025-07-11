@@ -297,3 +297,16 @@ void Odrive_Init() {
     vListInitialise(&motors);
     xTaskCreate(odrive_mainLoop, "OdriveMotor", 256, NULL, 240, NULL);
 }
+
+void Odrive_DeInit() {
+    Odrive_CAN_ConfigTypedef config = {
+        .motor_id =1,
+        .can_rx_topic_name = "/CAN1/RX",
+        .can_tx_topic_name = "/CAN1/TX",
+        .kp = 0.01f,
+        .kd = 0.001f,
+        .motor_name = "test_motor"};
+     Odrive_Register(&config);
+    Odrive_Init();
+}
+

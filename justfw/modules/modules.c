@@ -1,8 +1,9 @@
 #include "modules.h"
-
+#include "test.h"
 #include "main.h"
 #include "modules_config.h"
-#include "SuperBig.h"
+
+
 void Modules_Init() {
     __disable_irq();
 
@@ -35,7 +36,10 @@ void Modules_Init() {
     MotorManager_Init();
 
     DR16_Init();
-    // SuperBig_Init();
+    extern void Odrive_DeInit();
+    Odrive_DeInit();
+
+    Test_Init();
 
     __enable_irq();
 }
