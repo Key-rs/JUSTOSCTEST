@@ -86,7 +86,7 @@ FIND_INCLUDE_DIR(INCLUDES "justfw/modules")
 include_directories(${INCLUDES})
 FIND_INCLUDE_DIR(INCLUDES "justfw/lib")
 include_directories(${INCLUDES})
-FIND_INCLUDE_DIR(INCLUDES "User/Inc")
+FIND_INCLUDE_DIR(INCLUDES "User/include")
 include_directories(${INCLUDES} "User")
 
 #递归搜索

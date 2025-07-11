@@ -36,8 +36,8 @@ void Modules_Init() {
     MotorManager_Init();
 
     DR16_Init();
-    extern void Odrive_DeInit();
-    Odrive_DeInit();
+    // extern void Odrive_DeInit();
+    // Odrive_DeInit();
 
     Test_Init();
 
