@@ -478,7 +478,7 @@ void BSP_bmi088_Init() {
     // extern void imu_cli_register();
     // imu_cli_register();
 
-    // osThreadDef(imuTask, INS_task, osPriorityRealtime, 0, 1024);
+    // osThreadDef("imuTask", INS_task, osPriorityRealtime, 0, 1024);
     // imuTaskHandle = osThreadCreate(osThread(imuTask), NULL);
-    xTaskCreate(INS_task, "IMU", 1024, NULL, 1, (TaskHandle_t *const)&imuTaskHandle);
+    xTaskCreate(INS_task, "IMU", 1024, NULL, 240,NULL);
 }

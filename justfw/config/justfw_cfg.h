@@ -15,10 +15,4 @@
 
 #endif
 
-#ifdef STM32F446xx
-#define PLATFROM "D Board"
-#define USE_BOARD_D  // 使用D板
-
-#endif
-
 #endif

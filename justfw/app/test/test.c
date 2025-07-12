@@ -25,14 +25,15 @@ int angle=0;
         //     // test_motor->set_angle(test_motor, anglex);
         //     vTaskDelay(10);
         // }
-        printf("%d\n",angle);
-        vTaskDelay(1);
+        test_motor->set_speed(test_motor, 2.0f);;
+        printf("%f\n",test_motor->real_speed);
+        vTaskDelay(10);
     }
 }
 
-void Test_Init()
+void Test_Start()
 {
-    test_motor = pvSharePtr("test_motor", sizeof(INTF_Motor_HandleTypeDef));
+    test_motor = pvSharePtr("/motor/shooter_left", sizeof(INTF_Motor_HandleTypeDef));
     test_logic_rc_ctrl = pvSharePtr("DR16", sizeof(RC_ctrl_t));
     xTaskCreate(Test_MainLoop, "Test_MainLoop", 512, NULL, 240, NULL);
 }

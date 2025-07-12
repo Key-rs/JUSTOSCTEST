@@ -38,8 +38,8 @@ void Modules_Init() {
     DR16_Init();
     // extern void Odrive_DeInit();
     // Odrive_DeInit();
-
     Test_Init();
+    Test_Start();
 
     __enable_irq();
 }
