@@ -50,7 +50,7 @@ void C620_Init() {
     C620_Register(&config2);
 }
 
-void Test_init()
+void Test_Init()
 {
     C620_Init();
 
