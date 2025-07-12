@@ -375,7 +375,7 @@ void INS_task(void const *pvParameters) {
         INS_angle_N[0] = -INS_angle[0];
         INS_angle_N[1] = -INS_angle[1];
         INS_angle_N[2] = -INS_angle[2];
-        printf("%f",INS_angle_N[2]);
+
         //----------------多圈计数-----------------
         for (int i = 0; i < 3; ++i) {
             float tmp_angle = PI + INS_angle[i];
@@ -475,10 +475,10 @@ void BSP_bmi088_Init() {
     HAL_TIM_Base_Start(&HEAT_TIM_HANDLE);
     HAL_TIM_PWM_Start(&HEAT_TIM_HANDLE, HEAT_TIM_CHANNEL);
 
-    // extern void imu_cli_register();
-    // imu_cli_register();
+    extern void imu_cli_register();
+    imu_cli_register();
 
-    // osThreadDef("imuTask", INS_task, osPriorityRealtime, 0, 1024);
+    // osThreadDef(imuTask, INS_task, osPriorityRealtime, 0, 1024);
     // imuTaskHandle = osThreadCreate(osThread(imuTask), NULL);
-    xTaskCreate(INS_task, "IMU", 1024, NULL, 240,NULL);
+    xTaskCreate((void (*)(void *))INS_task, "IMU", 256, NULL, 1, (TaskHandle_t *const)&imuTaskHandle);
 }

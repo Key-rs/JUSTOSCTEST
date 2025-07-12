@@ -131,7 +131,7 @@ int main(void)
   HAL_GPIO_WritePin(LED_G_GPIO_Port, LED_G_Pin, GPIO_PIN_RESET);
   Sys_Init();
   Modules_Init();
-  vBusPublishFromName("/buzzer", (void*)"QFL");
+  vBusPublishFromName("/buzzer", (void*)"BAD_APPLE");
   /* USER CODE END 2 */
 
   /* Init scheduler */
