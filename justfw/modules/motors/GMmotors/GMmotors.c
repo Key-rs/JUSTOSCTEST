@@ -47,6 +47,8 @@ void GM_Init() {
     // 注册接收话题，仅用于比较话题地址，不发布消息
     GM_Buffer[0].can_rx_topic = xBusTopicRegister("/CAN1/RX");
     GM_Buffer[1].can_rx_topic = xBusTopicRegister("/CAN2/RX");
+    // extern void C620_Init();
+    // C620_Init();
 
     xTaskCreate(GM_MainLoop, "GM_Motor", 512, NULL, 200, NULL);
 }
