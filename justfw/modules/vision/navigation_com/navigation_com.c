@@ -9,8 +9,8 @@
 #include "queue.h"
 osThreadId Navigation_Com_MainLoopTaskHandle;
 
-BusTopicHandle_t *g_navigation_tx;
-BusTopicHandle_t *g_navigation_rx;
+BusTopicHandle_t g_navigation_tx;
+BusTopicHandle_t g_navigation_rx;
 
 QueueHandle_t navigation_msg_queue;
 // 上位机->下位机
