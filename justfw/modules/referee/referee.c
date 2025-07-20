@@ -894,7 +894,7 @@ int char_refresh(ext_string_data string_data) {
 //{
 //    *game_type = game_state.game_type;
 //}
-void Referee_RX_Callback(void *message, BusTopicHandle_t *topic) {
+void Referee_RX_Callback(void *message, BusTopicHandle_t topic) {
     INTF_Serial_MessageTypeDef *msg = (INTF_Serial_MessageTypeDef *) message;
     Referee_Solve(msg->data);
 }

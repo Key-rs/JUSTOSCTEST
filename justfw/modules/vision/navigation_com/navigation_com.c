@@ -25,7 +25,7 @@ union Navigation_S2M_Union {
   uint8_t raw[sizeof(Navigation_S2M_PacketTypeDef)];
 };
 
-void Navigation_Com_Solve(void *message, BusTopicHandle_t *topic) {
+void Navigation_Com_Solve(void *message, BusTopicHandle_t topic) {
   INTF_Serial_MessageTypeDef *msg = (INTF_Serial_MessageTypeDef *)message;
   if (msg->len != sizeof(Navigation_M2S_PacketTypeDef)) {
     return; // 长度不对丢包

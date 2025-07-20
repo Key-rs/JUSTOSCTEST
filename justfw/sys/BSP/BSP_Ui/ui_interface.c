@@ -9,7 +9,7 @@
 
 uint8_t seq = 0;
 int ui_self_id = 103;
-BusTopicHandle_t *ui_tx_topic;
+BusTopicHandle_t ui_tx_topic;
 void ui_port_init(){
   ui_tx_topic = xBusTopicRegister("/REFEREE/TX");
 }

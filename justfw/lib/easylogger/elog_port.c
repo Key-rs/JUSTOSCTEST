@@ -37,7 +37,7 @@
 extern osSemaphoreId elog_lockHandle;
 extern osSemaphoreId elog_asyncHandle;
 
-BusTopicHandle_t *g_elog_uart_tx_topic;
+BusTopicHandle_t g_elog_uart_tx_topic;
 
 /**
  * EasyLogger port initialize

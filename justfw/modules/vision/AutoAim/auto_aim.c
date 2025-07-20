@@ -94,7 +94,7 @@ void SolveT(AutoAim_M2S_PacketTypeDef *target){
   g_auto_aim_status->out_pitch=-pitch;
   g_auto_aim_status->solve_tick=xTaskGetTickCount();
 }
-void auto_aim_solve(void *msg,BusTopicHandle_t *topic){
+void auto_aim_solve(void *msg,BusTopicHandle_t topic){
   //收到视觉的目标信息
   AutoAim_M2S_PacketTypeDef *target=(AutoAim_M2S_PacketTypeDef *)msg;
   last_receive_msg_tick=xTaskGetTickCount();

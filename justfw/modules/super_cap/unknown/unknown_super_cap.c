@@ -10,9 +10,9 @@ osThreadId Unknown_SuperCapTaskHandle;
 
 SuperCap_State supercap_state;
 
-BusTopicHandle_t *sc_can;
+BusTopicHandle_t sc_can;
 
-void Unknown_CAN_CallBack(void *message, BusTopicHandle_t *topic) {
+void Unknown_CAN_CallBack(void *message, BusTopicHandle_t topic) {
     INTF_CAN_MessageTypeDef *msg = (INTF_CAN_MessageTypeDef *) message;
     if (msg->id_type == BSP_CAN_ID_EXT || msg->can_id!=0x211) {
         return;

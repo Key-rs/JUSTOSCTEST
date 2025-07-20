@@ -6,8 +6,8 @@
 
 #include "cmsis_os.h"
 
-BusTopicHandle_t *g_pm01_can_tx;
-BusSubscriberHandle_t *g_pm01_can_rx;
+BusTopicHandle_t g_pm01_can_tx;
+BusSubscriberHandle_t g_pm01_can_rx;
 
 PM01_StatusTypeDef g_pm01_status = {0};
 PM01_InputTypeDef g_pm01_input = {0};
@@ -126,7 +126,7 @@ void PM01_AskTemperature() {
     vBusPublish(g_pm01_can_tx, &msg);
 }
 
-void PM01_CAN_RX_CallBack(void *message, BusTopicHandle_t *topic){
+void PM01_CAN_RX_CallBack(void *message, BusTopicHandle_t topic){
     INTF_CAN_MessageTypeDef *msg = (INTF_CAN_MessageTypeDef *) message;
     if(msg->id_type != BSP_CAN_ID_STD){
         return;

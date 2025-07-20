@@ -11,8 +11,8 @@
 
 osThreadId Vision_Com_MainLoopTaskHandle;
 
-BusTopicHandle_t *g_autoaim_tx;
-BusTopicHandle_t *g_autoaim_rx;
+BusTopicHandle_t g_autoaim_tx;
+BusTopicHandle_t g_autoaim_rx;
 
 INTF_Chassis_HandleTypeDef *g_vision_chassis;
 INTF_Gimbal_HandleTypeDef *g_vision_gimbal;
@@ -30,7 +30,7 @@ union AutoAim_S2M_Union {
     uint8_t raw[sizeof(AutoAim_S2M_PacketTypeDef)];
 };
 
-void Vision_Com_Solve(void *message, BusTopicHandle_t *topic) {
+void Vision_Com_Solve(void *message, BusTopicHandle_t topic) {
     INTF_Serial_MessageTypeDef *msg = (INTF_Serial_MessageTypeDef *) message;
     if (msg->len != sizeof(AutoAim_M2S_PacketTypeDef)) {
         return;//长度不对丢包

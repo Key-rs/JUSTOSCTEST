@@ -16,7 +16,7 @@ void CAN_T(uint32_t id,uint8_t *data,uint32_t len){
   memcpy(msg.data,data,8);
   vBusPublish(supercap_can_tx_topic,&msg);
 }
-void SuperCap_CanCb(void *message, BusTopicHandle_t *topic){
+void SuperCap_CanCb(void *message, BusTopicHandle_t topic){
   INTF_CAN_MessageTypeDef *msg=message;
   SuperCap_DataProcess(msg->can_id,msg->data,8,&g_cap_state);
 }

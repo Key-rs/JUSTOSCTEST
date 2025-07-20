@@ -6,6 +6,7 @@
 #include "shared_ptr_intf.h"
 #include "task.h"
 #include "tinybus_intf.h"
+#include "PID.h"  // 引入新的PID库
 
 // 模式定义：电机角度模式/陀螺仪角度模式
 typedef enum {
@@ -19,24 +20,13 @@ RC_ctrl_t *gimbal_logic_rc_ctrl;
 INTF_Motor_HandleTypeDef *gimbal_motor;
 extern int g_dr16_is_connected;
 
-// PID控制器结构体（新增死区参数）
-typedef struct {
-    float kp;           // 比例系数
-    float ki;           // 积分系数
-    float kd;           // 微分系数
-    float integral;     // 积分项
-    float prev_error;   // 上一次误差
-    float output_limit; // 输出限幅（rad/s）
-    float dead_zone;    // 死区阈值（rad）
-} PID_Controller;
-
 // 一阶低通滤波器结构体
 typedef struct {
     float alpha;        // 滤波系数 (0.0~1.0)
     float prev_output;  // 上一次输出值
 } LowPassFilter;
 
-// 云台控制参数结构体（扩展双模式支持）
+// 云台控制参数结构体（修改为使用库中的PIDInstance）
 typedef struct {
     // 模式相关
     Gimbal_Mode current_mode;       // 当前模式
@@ -46,8 +36,8 @@ typedef struct {
     float motor_angle;              // 电机反馈角度(rad)
     float gyro_angle;               // 陀螺仪角度(rad)
 
-    // 控制器核心参数
-    PID_Controller pid;             // 角度控制PID
+    // 控制器核心参数（使用库中的PIDInstance）
+    PIDInstance pid;                // 角度控制PID
     LowPassFilter motor_filter;     // 电机角度滤波器
     LowPassFilter gyro_filter;      // 陀螺仪滤波器
     LowPassFilter output_filter;    // 输出速度滤波器
@@ -58,21 +48,8 @@ typedef struct {
 
     // 模式切换平滑过渡参数
     float mode_switch_alpha;        // 切换时目标值过渡系数
-    float mode_switch_target;               // 过渡过程中的目标值
+    float mode_switch_target;       // 过渡过程中的目标值
 } Gimbal_Control;
-
-
-// PID初始化
-void PID_Controller_Init(PID_Controller *pid, float kp, float ki, float kd,
-                        float limit, float dead_zone) {
-    pid->kp = kp;
-    pid->ki = ki;
-    pid->kd = kd;
-    pid->integral = 0.0f;
-    pid->prev_error = 0.0f;
-    pid->output_limit = limit;
-    pid->dead_zone = dead_zone;
-}
 
 // 低通滤波器初始化
 void LowPassFilter_Init(LowPassFilter *filter, float alpha) {
@@ -87,16 +64,35 @@ float LowPassFilter_Apply(LowPassFilter *filter, float input) {
     return output;
 }
 
-// 云台控制器初始化（支持双模式参数）
+// 云台控制器初始化（使用库中的PID初始化函数）
 void Gimbal_PID_Init(Gimbal_Control *gimbal,
-                // PID参数（双模式可共用或独立，此处共用）
+                // PID参数
                 float kp, float ki, float kd, float output_limit, float dead_zone,
                 // 滤波参数
                 float motor_alpha, float gyro_alpha, float output_alpha,
                 // 时间与过渡参数
                 float dt, float switch_alpha) {
-    // 初始化PID
-    PID_Controller_Init(&gimbal->pid, kp, ki, kd, output_limit, dead_zone);
+
+    // 配置PID初始化参数
+    PID_Init_Config_s pid_config = {
+        .Kp = kp,
+        .Ki = ki,
+        .Kd = kd,
+        .MaxOut = output_limit,        // 输出限幅
+        .IntegralLimit = output_limit, // 积分限幅
+        .DeadBand = dead_zone,         // 死区阈值
+        .Improve = PID_Trapezoid_Intergral |   // 启用梯形积分
+                   PID_Integral_Limit |       // 启用积分限幅
+                   PID_DerivativeFilter |     // 启用微分滤波
+                   PID_OutputFilter,          // 启用输出滤波
+        .CoefA = 0.3f,                 // 变速积分参数A
+        .CoefB = 0.1f,                 // 变速积分参数B
+        .Derivative_LPF_RC = 0.01f,    // 微分滤波时间常数
+        .Output_LPF_RC = 0.01f         // 输出滤波时间常数
+    };
+
+    // 初始化PID控制器
+    PIDInit(&gimbal->pid, &pid_config);
 
     // 初始化滤波器（电机角度和陀螺仪独立滤波）
     LowPassFilter_Init(&gimbal->motor_filter, motor_alpha);
@@ -118,7 +114,6 @@ void Gimbal_PID_Init(Gimbal_Control *gimbal,
     gimbal->mode_switch_target = 0.0f;
 }
 
-
 // 模式切换核心逻辑（解决抖动的关键）
 void Gimbal_SwitchMode(Gimbal_Control *gimbal, Gimbal_Mode new_mode) {
     if (gimbal->current_mode == new_mode) return;  // 模式未变化则退出
@@ -128,8 +123,8 @@ void Gimbal_SwitchMode(Gimbal_Control *gimbal, Gimbal_Mode new_mode) {
     gimbal->current_mode = new_mode;
 
     // 2. 重置PID状态（清除历史误差，避免切换后突变）
-    gimbal->pid.integral = 0.0f;
-    gimbal->pid.prev_error = 0.0f;
+    gimbal->pid.Iout = 0.0f;
+    gimbal->pid.Last_Err = 0.0f;
 
     // 3. 同步目标值：将目标值设置为新模式下的当前实际角度（关键！）
     // 确保切换瞬间误差为0，无输出突变
@@ -151,7 +146,7 @@ void Gimbal_SetTargetYaw(Gimbal_Control *gimbal, float target) {
     gimbal->mode_switch_target = target;
 }
 
-// 云台控制更新（根据当前模式选择角度源）
+// 云台控制更新（使用库中的PID计算函数）
 float Gimbal_Update(Gimbal_Control *gimbal, float motor_feedback, float gyro_data) {
     // 1. 独立更新双传感器角度（分别滤波，互不干扰）
     gimbal->motor_angle = LowPassFilter_Apply(&gimbal->motor_filter, motor_feedback);
@@ -167,36 +162,17 @@ float Gimbal_Update(Gimbal_Control *gimbal, float motor_feedback, float gyro_dat
     // 目标值平滑过渡（无论是否切换模式，均用低通滤波处理目标值，避免突变）
     gimbal->target_yaw = gimbal->mode_switch_alpha * gimbal->mode_switch_target +
                         (1 - gimbal->mode_switch_alpha) * gimbal->target_yaw;
-    gimbal->target_yaw = gimbal->target_yaw;
 
     // 3. 计算角度误差（最短路径）
-    float error = (gimbal->target_yaw - gimbal->real_yaw);
+    float error = gimbal->target_yaw - gimbal->real_yaw;
+    // 调整误差到最短路径
+    while (error > M_PI) error -= 2 * M_PI;
+    while (error < -M_PI) error += 2 * M_PI;
 
-    // 4. 死区处理
-    if (fabs(error) < gimbal->pid.dead_zone) {
-        error = 0.0f;
-        // gimbal->pid.integral = 0.0f;  // 可选：死区内清零积分（根据需求）
-    }
+    // 4. 使用库中的PID计算函数进行控制计算
+    float pid_output = PIDCalculate(&gimbal->pid, gimbal->real_yaw, gimbal->target_yaw);
 
-    // 5. PID计算（仅在误差非零时更新积分/微分）
-    float pid_output = 0.0f;
-    if (error != 0.0f) {
-        // 积分项（限幅）
-        gimbal->pid.integral += error * gimbal->dt;
-        gimbal->pid.integral = fminf(fmaxf(gimbal->pid.integral, -gimbal->pid.output_limit), gimbal->pid.output_limit);
-
-        // 微分项
-        float derivative = (error - gimbal->pid.prev_error) / gimbal->dt;
-        gimbal->pid.prev_error = error;
-
-        // 总输出
-        pid_output = gimbal->pid.kp * error +
-                    gimbal->pid.ki * gimbal->pid.integral +
-                    gimbal->pid.kd * derivative;
-    }
-
-    // 6. 输出限幅与滤波（进一步平滑输出）
-    pid_output = fminf(fmaxf(pid_output, -gimbal->pid.output_limit), gimbal->pid.output_limit);
+    // 5. 输出滤波（进一步平滑输出）
     gimbal->output_speed = LowPassFilter_Apply(&gimbal->output_filter, pid_output);
 
     return gimbal->output_speed;
@@ -212,10 +188,10 @@ void GimbalFollow_MainLoop() {
     // 初始化云台控制器
     Gimbal_Control gimbal;
     Gimbal_PID_Init(&gimbal,
-                10.5f, 0.02f, 0.02f,  // PID参数
-                15.0f, 0.002,      // 输出限幅与死区
-                0.8f, 0.8f, 0.7f,     // 滤波系数
-                0.01f, 0.2f);         // 采样时间与过渡系数
+                7.0f, 0.001f, 0.9f,  // PID参数
+                15.0f, 0.0f,      // 输出限幅与死区
+                0.3f, 0.2f, 0.3f,  // 滤波系数（调整为合理值）
+                0.01f, 0.2f);      // 采样时间与过渡系数
 
     // 主控制循环
     while (1) {
@@ -227,14 +203,14 @@ void GimbalFollow_MainLoop() {
         const bool rc_connected = (g_dr16_is_connected != 0);
 
         // 3. 模式切换逻辑（简化条件判断，提取公共操作）
-         Gimbal_Mode  desired_mode = (rc_connected &&
-                                         gimbal_logic_rc_ctrl[0].rc.switch_right == 2)
-                                         ? GYRO_ANGLE_MODE : MOTOR_ANGLE_MODE;
+        Gimbal_Mode desired_mode = (rc_connected &&
+                                        gimbal_logic_rc_ctrl[0].rc.switch_right == 2)
+                                        ? GYRO_ANGLE_MODE : MOTOR_ANGLE_MODE;
 
         if (desired_mode != gimbal.current_mode) {
-            target_imu_angle = gimbal.gyro_angle;
-            target_motor_angle = gimbal.motor_angle;
             Gimbal_SwitchMode(&gimbal, desired_mode);
+            target_imu_angle = GIMBAL_REAL_YAW;
+            target_motor_angle = gimbal_motor->real_angle;
             mode_state = (int)desired_mode;
         }
 
@@ -250,18 +226,23 @@ void GimbalFollow_MainLoop() {
                 // 设置目标角度（使用临时变量提高可读性）
                 Gimbal_SetTargetYaw(&gimbal, target_imu_angle);
             }
-            const int16_t rocker_value = gimbal_logic_rc_ctrl[0].rc.rocker_r_;
-            if (rocker_value > 200) target_motor_angle += 0.5f,target_imu_angle+=0.5f;
-            else if (rocker_value < -200) target_motor_angle -= 0.5f,target_imu_angle-=0.5f;
-
+            int16_t rocker_value = gimbal_logic_rc_ctrl[0].rc.rocker_r_;
+            // 根据摇杆值和采样时间计算角度增量
+            float speed_factor = -2.5f;  // 最大角速度(rad/s)
+            float delta = speed_factor * gimbal.dt * (rocker_value / 660.0f);  // 摇杆值归一化到[-1,1]
+            if (fabs(rocker_value) > 150) {  // 死区判断
+                target_motor_angle += delta;
+                target_imu_angle += delta;
+            }
         }
 
         // 5. 更新控制并输出（合并条件判断，减少重复调用）
         const float output_speed = Gimbal_Update(&gimbal, motor_feedback, gyro_feedback);
         gimbal_motor->set_speed(gimbal_motor, rc_connected ? output_speed : 0.0f);
+        printf("target_real_out:%.3f,%.3f,%.3f\n",target_imu_angle,GIMBAL_REAL_YAW,output_speed);
 
         // 6. 控制周期延时（明确注释周期时间）
-        vTaskDelay(10);  // 10ms控制周期，与采样时间dt一致
+        vTaskDelay(10);  // 10ms控制周期（与初始化时的dt一致）
     }
 }
 
@@ -269,5 +250,12 @@ void GimbalFollow_MainLoop() {
 void Gimbal_Test_Start() {
     gimbal_motor = pvSharePtr("gimbal_yaw", sizeof(INTF_Motor_HandleTypeDef));
     gimbal_logic_rc_ctrl = pvSharePtr("DR16", sizeof(RC_ctrl_t));
+
+    // 检查共享指针是否获取成功
+    if (gimbal_motor == NULL || gimbal_logic_rc_ctrl == NULL) {
+        printf("Error: Failed to get shared pointer!\n");
+        return;
+    }
+
     xTaskCreate(GimbalFollow_MainLoop, "GimbalFollow_MainLoop", 1024, NULL, 240, NULL);
 }
