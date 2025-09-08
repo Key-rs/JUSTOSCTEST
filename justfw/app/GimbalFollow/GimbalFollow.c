@@ -188,7 +188,7 @@ void GimbalFollow_MainLoop() {
     // 初始化云台控制器
     Gimbal_Control gimbal;
     Gimbal_PID_Init(&gimbal,
-                7.0f, 0.001f, 0.9f,  // PID参数
+                7.0f, 0.001f, 1.2f,  // PID参数
                 15.0f, 0.0f,      // 输出限幅与死区
                 0.3f, 0.2f, 0.3f,  // 滤波系数（调整为合理值）
                 0.01f, 0.2f);      // 采样时间与过渡系数
