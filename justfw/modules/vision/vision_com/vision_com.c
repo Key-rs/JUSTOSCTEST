@@ -30,7 +30,7 @@ union AutoAim_S2M_Union {
     uint8_t raw[sizeof(AutoAim_S2M_PacketTypeDef)];
 };
 
-void Vision_Com_Solve(void *message, BusTopicHandle_t topic) {
+void Vision_Com_Solve(void *message, BusSubscriberHandle_t topic) {
     INTF_Serial_MessageTypeDef *msg = (INTF_Serial_MessageTypeDef *) message;
     if (msg->len != sizeof(AutoAim_M2S_PacketTypeDef)) {
         return;//长度不对丢包

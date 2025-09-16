@@ -221,3 +221,16 @@ uint32_t getDtick(uint32_t *last_tick) {
 
     return ret;
 }
+
+// 低通滤波器初始化
+void LowPassFilter_Init(LowPassFilterConfig *filter, float alpha) {
+    filter->alpha = alpha;
+    filter->prev_output = 0.0f;
+}
+
+// 低通滤波计算
+float LowPassFilter_Apply(LowPassFilterConfig *filter, float input) {
+    float output = filter->alpha * input + (1.0f - filter->alpha) * filter->prev_output;
+    filter->prev_output = output;
+    return output;
+}

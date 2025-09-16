@@ -126,7 +126,7 @@ void PM01_AskTemperature() {
     vBusPublish(g_pm01_can_tx, &msg);
 }
 
-void PM01_CAN_RX_CallBack(void *message, BusTopicHandle_t topic){
+void PM01_CAN_RX_CallBack(void *message, BusSubscriberHandle_t topic){
     INTF_CAN_MessageTypeDef *msg = (INTF_CAN_MessageTypeDef *) message;
     if(msg->id_type != BSP_CAN_ID_STD){
         return;

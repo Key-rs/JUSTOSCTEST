@@ -70,6 +70,8 @@ typedef struct INTF_Helm_Chassis_Handle {
     void *private_data;
 } INTF_Helm_Chassis_HandleTypeDef;
 
+
+void System_Init();
 // INTF_Motor_HandleTypeDef *C620_Register(C620_ConfigTypeDef *config);
 // int16_t C620_Torque2Current(float torque);
 #endif

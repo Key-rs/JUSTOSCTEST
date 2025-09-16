@@ -281,4 +281,13 @@ uint32_t getDtick(uint32_t *last_tick);
 /* 宏定义：弧度格式化为 -π ~ π */
 #define rad_format(Ang) loop_float_constrain((Ang), -PI, PI)
 
+// 一阶低通滤波器结构体
+typedef struct {
+    float alpha;        // 滤波系数 (0.0~1.0)
+    float prev_output;  // 上一次输出值
+} LowPassFilterConfig;
+
+void LowPassFilter_Init(LowPassFilterConfig *filter, float alpha);
+float LowPassFilter_Apply(LowPassFilterConfig *filter, float input);
+
 #endif  // JUSTFW_USER_LIB_H

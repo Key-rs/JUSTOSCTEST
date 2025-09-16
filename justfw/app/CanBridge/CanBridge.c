@@ -10,6 +10,14 @@ helm_chassis_solve_param_t param;  // 底盘解算参数结构体（传递控制
 uint32_t last_enable_tick = 0;     // 最后一次启用电机的时间戳（用于定期启用）
 uint32_t last_msg_tick = 0;        // 最后一次接收CAN消息的时间戳（用于判断通信状态）
 
+INTF_Motor_HandleTypeDef *GM2;
+INTF_Motor_HandleTypeDef *GM4;
+INTF_Motor_HandleTypeDef *GM6;
+INTF_Motor_HandleTypeDef *GM8;
+
+
+extern void DM_Motor_CAN_CallBack(INTF_CAN_MessageTypeDef *header, uint8_t *data);  // 声明外部电机回调
+
 /**
  * @brief CAN消息接收回调函数（处理CAN1/CAN2的消息）
  * @param message CAN消息指针（类型为INTF_CAN_MessageTypeDef）
@@ -69,7 +77,6 @@ void CanBridge_CAN_CallBack(void *message, BusSubscriberHandle_t subscriber) {
         param.rb_wheel_rad_actual = helmChassis.rb_wheel.rad_target;  // 右后轮目标角度
 
     } else if (strcmp(subscriber->pxTopic->pcName, "/CAN2/RX") == 0) {  // CAN2：DM电机反馈处理
-        extern void DM_Motor_CAN_CallBack(INTF_CAN_MessageTypeDef *header, uint8_t *data);  // 声明外部电机回调
         DM_Motor_CAN_CallBack(msg, data);  // 转发消息至电机状态处理函数
     }
 }
@@ -168,36 +175,65 @@ void Online_detect() {
  *       - 定期（每3秒）重新启用所有电机（防止意外禁用）
  */
 void CanBridge_MainLoop() {
-    if (HAL_GetTick() - last_msg_tick > 1000) {  // 通信超时（离线状态）
-        // 停止所有驱动电机（ID2/4/6/8）
-        HelmMotor_SetSpeed(2, 0); vTaskDelay(5);
-        HelmMotor_SetSpeed(4, 0); vTaskDelay(5);
-        HelmMotor_SetSpeed(6, 0); vTaskDelay(5);
-        HelmMotor_SetSpeed(8, 0); vTaskDelay(5);
-    } else {  // 通信正常（在线状态）
-        // 设置转向电机目标角度（ID1/3/5/7，角度取反适配机械安装方向）
-        HelmMotor_SetAngle(1, -helmChassis.lf_wheel.rad_target, 10); vTaskDelay(5);  // 左前轮
-        HelmMotor_SetAngle(7, -helmChassis.rf_wheel.rad_target, 10); vTaskDelay(5);  // 右前轮
-        HelmMotor_SetAngle(5, -helmChassis.rb_wheel.rad_target, 10); vTaskDelay(5);  // 右后轮
-        HelmMotor_SetAngle(3, -helmChassis.lb_wheel.rad_target, 10); vTaskDelay(5);  // 左后轮
+    while (1)
+    {
+        // HelmMotor_SetSpeed(2, 16); vTaskDelay(5);//左前
+        if (HAL_GetTick() - last_msg_tick > 1000) {  // 通信超时（离线状态）
+            // 停止所有驱动电机（ID2/4/6/8）
+            HelmMotor_SetAngle(1, -1.5, 10); vTaskDelay(5);  // //左前1
+            HelmMotor_SetAngle(7, 0.3, 10); vTaskDelay(5);  // //左后7
+            HelmMotor_SetAngle(5, -1.5, 10); vTaskDelay(5);  // //右后5
+            HelmMotor_SetAngle(3, 1.5, 10); vTaskDelay(5);  // //右前3
+            //右前3
+            //左前1
+            //右后5
+            //左后7
 
-        // 设置驱动电机目标速度（速度=目标线速度/车轮半径，转换为电机转速）
-        HelmMotor_SetSpeed(2, helmChassis.lf_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 左前轮
-        HelmMotor_SetSpeed(8, helmChassis.rf_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 右前轮
-        HelmMotor_SetSpeed(6, helmChassis.rb_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 右后轮
-        HelmMotor_SetSpeed(4, helmChassis.lb_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 左后轮
-    }
+            // HelmMotor_SetSpeed(2, 0); vTaskDelay(5);//左前
+            // HelmMotor_SetSpeed(4, 0); vTaskDelay(5);//左后
+            // HelmMotor_SetSpeed(6, 0); vTaskDelay(5);//右前
+            // HelmMotor_SetSpeed(8, 0); vTaskDelay(5);//右后
+            GM2->target_speed=3;
+            GM4->target_speed=3;
+            GM6->target_speed=3;
+            GM8->target_speed=3;
+        } else {  // 通信正常（在线状态）
+            // 设置转向电机目标角度（ID1/3/5/7，角度取反适配机械安装方向）
+            HelmMotor_SetAngle(1, -1.5-helmChassis.lf_wheel.rad_target, 10); vTaskDelay(5);  // 左前轮
+            HelmMotor_SetAngle(5, -1.5-helmChassis.rf_wheel.rad_target, 10); vTaskDelay(5);  // 右前轮
+            HelmMotor_SetAngle(7, 0.3-helmChassis.lb_wheel.rad_target, 10); vTaskDelay(5);  // 左后轮
+            HelmMotor_SetAngle(3, 1.5-helmChassis.rb_wheel.rad_target, 10); vTaskDelay(5);  // 右后轮
 
-    // 定期（每3秒）重新启用所有电机（防止意外禁用）
-    if (HAL_GetTick() - last_enable_tick > 3000) {
-        for (int i = 1; i <= 8; ++i) {
-            HelmMotor_Enable(i);       // 启用ID1~8电机
-            vTaskDelay(10);             // 确保命令间隔（避免总线拥堵）
+            // 设置驱动电机目标速度（速度=目标线速度/车轮半径，转换为电机转速）
+            GM2->target_speed=helmChassis.lf_wheel.v_target / WHEEL_RADIUS;
+            GM4->target_speed=helmChassis.rf_wheel.v_target / WHEEL_RADIUS;
+            GM6->target_speed=helmChassis.rb_wheel.v_target / WHEEL_RADIUS;
+            GM8->target_speed=helmChassis.lb_wheel.v_target / WHEEL_RADIUS;
+
+
+            // HelmMotor_SetSpeed(2, helmChassis.lf_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 左前轮
+            // HelmMotor_SetSpeed(6, helmChassis.rf_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 右前轮
+            // HelmMotor_SetSpeed(8, helmChassis.rb_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 右后轮
+            // HelmMotor_SetSpeed(4, helmChassis.lb_wheel.v_target / WHEEL_RADIUS); vTaskDelay(5);  // 左后轮
         }
-        last_enable_tick = HAL_GetTick();  // 更新最后启用时间戳
-    }
 
-    vTaskDelay(10);  // 主循环延时（控制执行频率）
+        // 定期（每3秒）重新启用所有电机（防止意外禁用）
+        if (HAL_GetTick() - last_enable_tick > 3000) {
+
+            HelmMotor_Enable(1);       // 启用ID1~8电机
+            vTaskDelay(5);             // 确保命令间隔（避免总线拥堵）
+            HelmMotor_Enable(3);       // 启用ID1~8电机
+            vTaskDelay(5);             // 确保命令间隔（避免总线拥堵）
+            HelmMotor_Enable(5);       // 启用ID1~8电机
+            vTaskDelay(5);             // 确保命令间隔（避免总线拥堵）
+            HelmMotor_Enable(7);       // 启用ID1~8电机
+            vTaskDelay(5);             // 确保命令间隔（避免总线拥堵）
+
+            last_enable_tick = HAL_GetTick();  // 更新最后启用时间戳
+        }
+
+        vTaskDelay(10);  // 主循环延时（控制执行频率）
+    }
 }
 
 /**
@@ -207,14 +243,20 @@ void CanBridge_MainLoop() {
  *       - 初始化私有数据（可选）
  *       - 创建FreeRTOS任务，启动CanBridge_MainLoop主循环
  */
-void CanBridge_Init() {
-    // CanBridge_ResDataTypeDef *priv = chass->private_data;  // 获取私有数据（当前未使用）
+void CanBridge_Init(INTF_Helm_Chassis_HandleTypeDef *chassis) {
+     CanBridge_ResDataTypeDef *priv = chassis->private_data;  // 获取私有数据（当前未使用）
 
     // 创建FreeRTOS任务（任务名、栈大小、参数、优先级、任务句柄）
     xTaskCreate(CanBridge_MainLoop, "CanBridge_MainLoop", 1024, NULL, 1, NULL);
 }
 
 void System_Init() {
+
+    GM2=pvSharePtr("GMMotor2", sizeof(INTF_Motor_HandleTypeDef));
+    GM4=pvSharePtr("GMMotor4", sizeof(INTF_Motor_HandleTypeDef));
+    GM6=pvSharePtr("GMMotor6", sizeof(INTF_Motor_HandleTypeDef));
+    GM8=pvSharePtr("GMMotor8", sizeof(INTF_Motor_HandleTypeDef));
+
     // 1. 定义底盘配置参数（需根据实际CAN主题名称、指针名称等填写）
     INTF_Helm_Chassis_HandleTypeDef chassis_config = {
         .chassis_ptr_name = "MainChassis",  // 底盘共享指针名称（需全局唯一）
@@ -223,10 +265,10 @@ void System_Init() {
         .can_tx_topic_name = "/CAN1/TX",     // CAN发送主题名称（用于发送控制消息）
         .can_trans_tx_topic_name = "/CAN2/TX" // 转发CAN发送主题名称
     };
-    CanBridge_Register(&chassis_config);
+    // CanBridge_Register(&chassis_config);
     // 2. 调用注册函数获取底盘句柄
-    // INTF_Helm_Chassis_HandleTypeDef *main_chassis = CanBridge_Register(&chassis_config);
-
+     INTF_Helm_Chassis_HandleTypeDef *main_chassis = CanBridge_Register(&chassis_config);
+    HelmChassis_Init();
     // 3. 启动底盘主循环（通过CanBridge_Init函数）
-    CanBridge_Init();  // 该函数会创建FreeRTOS任务运行CanBridge_MainLoop
+    CanBridge_Init(main_chassis);  // 该函数会创建FreeRTOS任务运行CanBridge_MainLoop
 }

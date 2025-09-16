@@ -264,7 +264,7 @@ void Cybergear_MainLoop() {
  * @param message CAN消息指针（类型为INTF_CAN_MessageTypeDef）
  * @param topic 订阅的CAN接收话题句柄
  */
-void Cybergear_CAN_CallBack(void *message, BusTopicHandle_t topic) {
+void Cybergear_CAN_CallBack(void *message, BusSubscriberHandle_t topic) {
     INTF_CAN_MessageTypeDef *msg = (INTF_CAN_MessageTypeDef *) message;
 
     // 过滤无效消息（仅处理扩展帧且ID在指定范围内）
@@ -282,7 +282,7 @@ void Cybergear_CAN_CallBack(void *message, BusTopicHandle_t topic) {
     for (i = 0; i < CYBERGEAR_MOTOR_NUM; i++) {
         // 匹配条件：电机ID一致且CAN接收话题匹配
         if (g_cybergear_motors[i]->motor_id == id &&
-            ((Cybergear_ResDataTypeDef*)g_cybergear_motors[i]->private_data)->can_rx_topic->pxTopic == topic) {
+            ((Cybergear_ResDataTypeDef*)g_cybergear_motors[i]->private_data)->can_rx_topic->pxTopic == topic->pxTopic) {
             m = g_cybergear_motors[i];
             break;
         }
@@ -342,22 +342,19 @@ void Cybergear_Register(Cybergear_ConfigTypeDef *config) {
 void Cybergear_Init() {
 
   //注册电机开始
-  Cybergear_ConfigTypeDef pitch_config = {
-      .motor_id = 127,
-      .motor_ptr_name = "motor_pitch",
-      .angle_offset = 0,
-      .direction = 1.0f,
-      .motor_mode = MOTOR_MODE_ANGLE,
-      .kd=0.5f,
-      .kp=5.0f,
-      .can_rx_topic_name = "/CAN1/RX",
-      .can_tx_topic_name = "/CAN1/TX",
-  };
-  Cybergear_Register(&pitch_config);
+    Cybergear_ConfigTypeDef pitch_config = {
+        .motor_id = 127,
+        .motor_ptr_name = "motor_pitch",
+        .angle_offset = 0,
+        .direction = 1.0f,
+        .motor_mode = MOTOR_MODE_SPEED,
+        .kd=4.5f,
+        .kp=0.0f,
+        .can_rx_topic_name = "/CAN2/RX",
+        .can_tx_topic_name = "/CAN2/TX",
+    };
+    Cybergear_Register(&pitch_config);
     //注册电机结束
-
-    // osThreadDef(Cybergear_MainLoopTask, Cybergear_MainLoop, osPriorityLow, 0, 256);
-    // Cybergear_MainLoopTaskHandle = osThreadCreate(osThread(Cybergear_MainLoopTask), NULL);
     xTaskCreate(Cybergear_MainLoop, "Cybergear_MainLoopTask", 512, NULL, 5, NULL);
 }
 

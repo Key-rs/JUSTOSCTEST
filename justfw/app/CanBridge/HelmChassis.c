@@ -212,16 +212,9 @@ void V_Dir2Wheel_Angle(helm_wheel_t *wheel, float dir)
  * @brief 角度限制函数（将角度限制在-180°~180°范围内）
  * @param angle 待调整的角度指针（角度制）
  */
-void Angle_Limit(float *angle)
-{
-  // 递归调整角度：超过180°则减360°，低于-180°则加360°
-  if(*angle>180.0f) {
-    *angle-=360.0f;
-    Angle_Limit(angle);
-  } else if(*angle<=-180.0f) {
-    *angle+=360.0f;
-    Angle_Limit(angle);
-  }
+void Angle_Limit(float *angle) {
+  while (*angle > 180.0f) *angle -= 360.0f;
+  while (*angle <= -180.0f) *angle += 360.0f;
 }
 
 /**
