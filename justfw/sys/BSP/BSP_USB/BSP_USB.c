@@ -1,3 +1,4 @@
+
 #include "BSP_USB_cfg.h"
 #include "intf_sys.h"
 
@@ -6,9 +7,12 @@ static StreamListenerHandle_t usb_tx_listener;     // USB TX 数据监听器
 static StreamBufferHandle_t usb_tx_buffer;         // USB TX 数据缓冲区
 static StaticStreamBuffer_t usb_tx_buffer_struct;  // USB TX 静态缓冲区结构
 
+#define USB_USE_BUS
 #ifdef USB_USE_BUS
-static BusTopicHandle_t *usb_tx_subscriber;  // USB TX 总线订阅者
-static BusTopicHandle_t *usb_rx_topic;       // USB RX 总线主题
+static BusTopicHandle_t usb_tx_subscriber;  // USB TX 总线订阅者
+static BusTopicHandle_t usb_rx_topic;       // USB RX 总线主题
+
+BusSubscriberHandle_t usb_tx_subscriber_;
 
 static StreamBufferHandle_t usb_rx_output_buffer;  // USB RX 输出缓冲区
 static StreamListenerHandle_t usb_rx_output_listener;
@@ -20,10 +24,10 @@ static void usb_rx_to_bus_handler(StreamListenerHandle_t listener) {
     INTF_Serial_MessageTypeDef msg = {
         .data = buffer,
         .len = length};
-    Bus_Publish(usb_rx_topic, &msg);
+    vBusPublish(usb_rx_topic, &msg);
 }
 
-static void usb_tx_bus_callback(void *message, BusSubscriberDef subscriber) {
+static void usb_tx_bus_callback(void *message, BusSubscriberHandle_t subscriber) {
     INTF_Serial_MessageTypeDef *msg = (INTF_Serial_MessageTypeDef *)message;
     xStreamWrite(usb_tx_buffer, msg->data, msg->len, portMAX_DELAY);
 }
@@ -55,11 +59,11 @@ void BSP_USB_Init() {
     // usb_rx_output_buffer = xStreamBufferCreate(USB_RX_BUFFER_SIZE, 1);
     // usb_rx_sharer->register_output(usb_rx_sharer, usb_rx_output_buffer);
     usb_rx_output_buffer = xSharedStreamOutputCreate(usb_rx_sharer, USB_RX_BUFFER_SIZE);
-
     usb_rx_output_listener = xStreamListenerCreate(usb_rx_output_buffer);
     usb_rx_output_listener->pvOnDataReceived = usb_rx_to_bus_handler;
 
     usb_rx_topic = xBusTopicRegister(BSP_USB_RX_TOPIC_NAME);
-    usb_tx_subscriber = xBusSubscribeFromName(BSP_USB_TX_TOPIC_NAME, usb_tx_bus_callback);
+     usb_tx_subscriber_ = xBusSubscribeFromName(BSP_USB_TX_TOPIC_NAME, usb_tx_bus_callback);
+    usb_tx_subscriber=usb_tx_subscriber_->pxTopic;
 #endif
 }

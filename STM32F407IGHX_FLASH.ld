@@ -77,7 +77,11 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;        /* define a global symbols at end of code */
   } >FLASH
-
+  .user_modules : {
+    _user_modules_start = .;          /* 定义段开始地址 */
+    KEEP(*(cUserModule))              /* 保留 cUserModule 段 */
+    _user_modules_end = .;            /* 定义段结束地址 */
+  } >FLASH                          /* 这里你可以根据需要指定段所在的内存区域 */
   /* Constant data into "FLASH" Rom type memory */
   .rodata :
   {
